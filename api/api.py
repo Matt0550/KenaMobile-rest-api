@@ -6,7 +6,7 @@
 import datetime
 
 from fastapi import FastAPI
-from typing import Any, List
+from typing import Any
 
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -14,10 +14,14 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.exceptions import RequestValidationError
 from fastapi.requests import Request
-from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from functions import KenaMobileWorker
+
 # New response structure: {"details": ..., "status_code": ..., "success": ...}
 class ResponseStructure(BaseModel):
     details: Any
@@ -34,10 +38,14 @@ class CustomResponse(JSONResponse):
 class PHPSESSID(BaseModel):
     PHPSESSID: str
 
-app = FastAPI(default_response_class=CustomResponse, title="KenaMobile Unofficial API", description="An unofficial API for KenaMobile website", version="1.0.0")
+limiter = Limiter(key_func=get_remote_address, application_limits=["20/day", "2/minute"])
+
+app = FastAPI(default_response_class=CustomResponse, title="KenaMobile Unofficial REST API", description="An unofficial REST API for KenaMobile", version="1.0.0")
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 origins = ["*"]
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -45,6 +53,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(SlowAPIMiddleware)
 
 KENA_WORKER = KenaMobileWorker()
 
@@ -96,18 +105,33 @@ def api_status(request: Request):
 
     return {"status": "online", "uptime": uptime, "url": url}
 
+def validatePhoneNumber(phoneNumber: str):
+    if phoneNumber[0:3] == "+39":
+        phoneNumber = phoneNumber[3:]
+    if len(phoneNumber) != 10:
+        return False
+    return True
 
 @app.get("/getCreditInfo")
-def getCreditInfo(phoneNumber: str, sessionID: PHPSESSID):
-    KENA_WORKER.setPhpSession(sessionID.PHPSESSID)
+def getCreditInfo(request: Request, phoneNumber: str, PHPSESSID: PHPSESSID):
+    if not validatePhoneNumber(phoneNumber):
+        return CustomResponse(content="Invalid phone number", status_code=400)
+    
+    KENA_WORKER.setPhpSession(PHPSESSID.PHPSESSID)
     return KENA_WORKER.getUserCreditInfo(phoneNumber)
 
 @app.get("/getCustomerDTO")
-def getCustomerDTO(phoneNumber: str, sessionID: PHPSESSID):
-    KENA_WORKER.setPhpSession(sessionID.PHPSESSID)
+def getCustomerDTO(request: Request, phoneNumber: str, PHPSESSID: PHPSESSID):
+    if not validatePhoneNumber(phoneNumber):
+        return CustomResponse(content="Invalid phone number", status_code=400)
+    
+    KENA_WORKER.setPhpSession(PHPSESSID.PHPSESSID)
     return KENA_WORKER.getCustomerDTO(phoneNumber)
 
 @app.get("/getPromo")
-def getPromo(phoneNumber: str, sessionID: PHPSESSID):
-    KENA_WORKER.setPhpSession(sessionID.PHPSESSID)
+def getPromo(request: Request, phoneNumber: str, PHPSESSID: PHPSESSID):
+    if not validatePhoneNumber(phoneNumber):
+        return CustomResponse(content="Invalid phone number", status_code=400)
+    
+    KENA_WORKER.setPhpSession(PHPSESSID.PHPSESSID)
     return KENA_WORKER.getUserPromo(phoneNumber)

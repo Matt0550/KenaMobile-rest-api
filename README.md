@@ -8,62 +8,53 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/Matt0550/EurostreamingAPI-scraping">
-    <img src="https://raw.githubusercontent.com/Matt0550/public-gaac/main/uploads/eurostreaming_scraping_api_logo_unofficial.png" alt="Logo" height="40">
+  <a href="https://github.com/Matt0550/KenaMobile-rest-api">
+    <img src="https://raw.githubusercontent.com/Matt0550/public-gaac/main/uploads/kena_mobile_unofficial_rest_api.png" alt="Logo" height="120" style="border-radius: 10px">
   </a>
 
-  <h3 align="center">Eurostreaming Unofficial REST API & WebApp</h3>
+  <h3 align="center">Kena Mobile Unofficial REST API</h3>
 
   <p align="center">
-    An unofficial REST API for Eurostreaming website, with a WebApp to search for movies and series. Using FastAPI and BeautifulSoup.
+    An unofficial REST API for Kena Mobile website.
     <br />
     <br />
-    <a href="https://github.com/Matt0550/EurostreamingAPI-scraping/issues">Report Bug</a>
+    <a href="https://github.com/Matt0550/KenaMobile-rest-api/issues">Report Bug</a>
     ·
-    <a href="https://github.com/Matt0550/EurostreamingAPI-scraping/issues">Request Feature</a>
+    <a href="https://github.com/Matt0550/KenaMobile-rest-api/issues">Request Feature</a>
   </p>
 </div>
 
-All the data is scraped from the Eurostreaming website. This project is for educational purposes only. I do not condone piracy in any way. Please use this project responsibly. 
+This project is for educational purposes only. Please use this project responsibly. 
 
 Copyright and all rights belong to the respective owners.
 
-
-# EurostreamingAPI-scraping
-
-An unofficial REST API for Eurostreaming website, with a WebApp to search for movies and series. Using FastAPI and BeautifulSoup.
-
 ## Features
 
-- Get all series per page
-- Search for series
-- Get the list of seasons and episodes of a series and related links to watch them
-
+- Get customer information
+- Get user offers information
+- Get user credit information
+ 
 ## API Endpoints
-
-- `/shows/{page}`: Get all series per page. Page is an integer and is required.
-- `/search?q={query}&page={page}`: Search for series. Query is a string and is required. Page is an integer and is optional.
-- `/show?path={show_path}&alsoEpisodes={alsoEpisodes}`: Get the list of seasons and episodes of a series and related links to watch them. Show_path is a string and is required. AlsoEpisodes is a boolean and is optional, default is true.
-
 > [!TIP]
 > The API is self-documented. You can access the Swagger UI at `/docs` and the ReDoc UI at `/redoc`.
 
-## WebApp
-A WebApp is now available as a Telegram Mini App. Check out the repository [here](https://github.com/Matt0550/Eurostreaming-telegramBot).
+- `/getCreditInfo?phoneNumber={phone}`: Get the credit information of a user. Phone is a string and is required.
+- `/getCustomerDTO?phoneNumber={phone}`: Get the customer information of a user. Phone is a string and is required.
+- `/getPromo?phoneNumber={phone}`: Get the offers information of a user. Phone is a string and is required.
+  
+> [!WARNING]
+> For all the endpoints you need to pass the `PHPSESSID` in the body of the request. You can get it by logging in to the Kena Mobile website and copying the `PHPSESSID` cookie. 
 
-Demo video:
-
-https://github.com/user-attachments/assets/38c202f8-6bcc-4983-8847-cf5aaf0d9d2a
 
 ## TO-DO
 - [X] Add Dockerfile
 - [X] Add Docker Compose
-- [X] Add WebApp (Now available as a Telegram Mini App. Check it out [here](https://github.com/Matt0550/Eurostreaming-telegramBot))
-- [ ] Add show categories
+- [ ] Add more endpoints
 
 
 ## Public instance of the API
-Unfortunately, I can't provide a public instance of the API because scraping is not a good practice and it's illegal in some cases. You can host your own instance of the API using the instructions below.
+You can use the public instance of the API at `https://kena-api.cloud.matteosillitti.it/` (click [here](https://kena-api.cloud.matteosillitti.it/)).
+Limitations: 2 requests per minute, 20 requests per day. If you need more requests, [contact me](#help---feedback).
 
 ## Environment Variables (docker)
 | Variable | Description | Default |
@@ -79,10 +70,10 @@ version: '3'
 
 services:
   eurostreaming_scraping:
-    image: matt0550/eurostreamingapi-scraping
+    image: matt0550/kenamobile_restapi
     environment:
-      - PUID=1000     # UID of the user inside the container, make sure it has access to the database file
-      - PGID=1000     # GID of the user inside the container, make sure it has access to the database file
+      - PUID=1000     # UID of the user inside the container
+      - PGID=1000     # GID of the user inside the container
     ports:
       - 5000:5000
     restart: unless-stopped
@@ -94,7 +85,7 @@ Run the container with `docker-compose up -d`
 Pull the image
 
 ```bash
-  docker run -d -p 5000:5000 -e PUID=1000 -e PGID=1000 matt0550/eurostreamingapi-scraping
+  docker run -d -p 5000:5000 -e PUID=1000 -e PGID=1000 matt0550/kenamobile_restapi
 ```
 
 ## Installation - Self-Host or docker build
@@ -102,19 +93,19 @@ Pull the image
 Clone the project
 
 ```bash
-  git clone https://github.com/Matt0550/EurostreamingAPI-scraping
+  git clone https://github.com/Matt0550/KenaMobile-rest-api
 ```
 
 Go to the project directory
 
 ```bash
-  cd EurostreamingAPI-scraping-master
+  cd KenaMobile-rest-api-master
 ```
 
 OPTIONAL: use docker to build the image
 
 ```bash
-  docker build -t eurostreamingAPI-scraping .
+  docker build -t KenaMobile-rest-api .
 ```
 
 If you don't want to use docker, skip this step.
@@ -131,7 +122,7 @@ Start the REST API (after setting the environment variables)
 
 ```bash
   cd api
-  fastapi run api.py
+  uvicorn api:app
 ```
 
 ## Help - feedback
@@ -155,17 +146,17 @@ Mail: <a href="mailto:mail@matteosillitti.it">me@matteosillitti.it</a>
 
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://paypal.me/sillittimatteo)
 
-[contributors-shield]: https://img.shields.io/github/contributors/Matt0550/EurostreamingAPI-scraping.svg?style=for-the-badge
-[contributors-url]: https://github.com/Matt0550/EurostreamingAPI-scraping/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/Matt0550/EurostreamingAPI-scraping.svg?style=for-the-badge
-[forks-url]: https://github.com/Matt0550/EurostreamingAPI-scraping/network/members
-[stars-shield]: https://img.shields.io/github/stars/Matt0550/EurostreamingAPI-scraping.svg?style=for-the-badge
-[stars-url]: https://github.com/Matt0550/EurostreamingAPI-scraping/stargazers
-[issues-shield]: https://img.shields.io/github/issues/Matt0550/EurostreamingAPI-scraping.svg?style=for-the-badge
-[issues-url]: https://github.com/Matt0550/EurostreamingAPI-scraping/issues
-[license-shield]: https://img.shields.io/github/license/Matt0550/EurostreamingAPI-scraping.svg?style=for-the-badge
-[license-url]: https://github.com/Matt0550/EurostreamingAPI-scraping/blob/master/LICENSE
+[contributors-shield]: https://img.shields.io/github/contributors/Matt0550/KenaMobile-rest-api.svg?style=for-the-badge
+[contributors-url]: https://github.com/Matt0550/KenaMobile-rest-api/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/Matt0550/KenaMobile-rest-api.svg?style=for-the-badge
+[forks-url]: https://github.com/Matt0550/KenaMobile-rest-api/network/members
+[stars-shield]: https://img.shields.io/github/stars/Matt0550/KenaMobile-rest-api.svg?style=for-the-badge
+[stars-url]: https://github.com/Matt0550/KenaMobile-rest-api/stargazers
+[issues-shield]: https://img.shields.io/github/issues/Matt0550/KenaMobile-rest-api.svg?style=for-the-badge
+[issues-url]: https://github.com/Matt0550/KenaMobile-rest-api/issues
+[license-shield]: https://img.shields.io/github/license/Matt0550/KenaMobile-rest-api.svg?style=for-the-badge
+[license-url]: https://github.com/Matt0550/KenaMobile-rest-api/blob/master/LICENSE
 [discord-shield]: https://img.shields.io/discord/828990499507404820?style=for-the-badge
 [discord-url]: https://go.matteosillitti.it/discord
-[docker-shield]: https://img.shields.io/docker/pulls/matt0550/eurostreamingapi-scraping?style=for-the-badge
-[docker-url]: https://hub.docker.com/r/matt0550/eurostreamingapi-scraping
+[docker-shield]: https://img.shields.io/docker/pulls/matt0550/kenamobile_restapi?style=for-the-badge
+[docker-url]: https://hub.docker.com/r/matt0550/kenamobile_restapi
