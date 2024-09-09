@@ -17,7 +17,7 @@ from fastapi.requests import Request
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 
-
+from functions import KenaMobileWorker
 # New response structure: {"details": ..., "status_code": ..., "success": ...}
 class ResponseStructure(BaseModel):
     details: Any
@@ -31,6 +31,8 @@ class CustomResponse(JSONResponse):
         content = ResponseStructure(details=content, success=False if status_code != 200 else True, status_code=status_code)
         super().__init__(content=content.dict(), status_code=status_code, *args, **kwargs)
 
+class PHPSESSID(BaseModel):
+    PHPSESSID: str
 
 app = FastAPI(default_response_class=CustomResponse, title="KenaMobile Unofficial API", description="An unofficial API for KenaMobile website", version="1.0.0")
 
@@ -43,6 +45,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+KENA_WORKER = KenaMobileWorker()
 
 UP_START_TIME = datetime.datetime.now() # For the uptime
 
@@ -91,3 +95,19 @@ def api_status(request: Request):
     url = url.scheme + "://" + url.netloc
 
     return {"status": "online", "uptime": uptime, "url": url}
+
+
+@app.get("/getCreditInfo")
+def getCreditInfo(phoneNumber: str, sessionID: PHPSESSID):
+    KENA_WORKER.setPhpSession(sessionID.PHPSESSID)
+    return KENA_WORKER.getUserCreditInfo(phoneNumber)
+
+@app.get("/getCustomerDTO")
+def getCustomerDTO(phoneNumber: str, sessionID: PHPSESSID):
+    KENA_WORKER.setPhpSession(sessionID.PHPSESSID)
+    return KENA_WORKER.getCustomerDTO(phoneNumber)
+
+@app.get("/getPromo")
+def getPromo(phoneNumber: str, sessionID: PHPSESSID):
+    KENA_WORKER.setPhpSession(sessionID.PHPSESSID)
+    return KENA_WORKER.getUserPromo(phoneNumber)

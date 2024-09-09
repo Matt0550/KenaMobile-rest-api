@@ -100,4 +100,4 @@ class PromoModel(BaseModel):
     translated_fields: Optional[TranslatedFields]
     hasPendingCO: Optional[bool]
     said: Optional[int]
-    auxBag: Optional[Dict[int, AuxBagItem]]
+    auxBag: Optional[AuxBagItem]

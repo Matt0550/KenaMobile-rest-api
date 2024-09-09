@@ -5,6 +5,7 @@
 
 import requests
 from bs4 import BeautifulSoup
+from models import CustomerDTO, UserCreditInfo, PromoModel
 
 class KenaMobileWorker:
     def __init__(self):
@@ -16,42 +17,79 @@ class KenaMobileWorker:
         self.session = requests.Session()
         self.cookies = {}
 
-    # ! NOT WORKING YET
-    def login(self, username, password):
-        data = {
-            'action': 'kena_set_tpc_cookie',
-            'referrer': 'https://www.kenamobile.it/',
-            'page': 'https://www.kenamobile.it/mykena/#/dashboard',
-            'agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
-            'campaign': 'false',
-            'cookie_value': ''
-        }
-        response = self.session.post(self.url, headers=self.headers, data=data, timeout=self.timeout)
-        print(response.text)
-        self.cookies = response.cookies.get_dict()
-        print(self.cookies)
-
-        response = self.session.get("https://www.kenamobile.it/mykena/login", headers=self.headers, cookies=self.cookies, timeout=self.timeout)
-        # Get sessionDataKey from hidden input
-        soup = BeautifulSoup(response.text, 'html.parser')
-        sessionDataKey = soup.find('input', {'name': 'sessionDataKey'}).get('value')
-        print(sessionDataKey)
-
-        data = {
-            'username': username,
-            'password': password,
-            'sessionDataKey': sessionDataKey,
-        }
-
-        response = self.session.post("https://auth.kenamobile.it/wso2is/oauth2/authorize?sessionDataKey=" + sessionDataKey, headers=self.headers, cookies=self.cookies, timeout=self.timeout)
-
-        
-        # Pass data as form data to https://auth.kenamobile.it/wso2is/commonauth
-        response = self.session.post("https://auth.kenamobile.it/wso2is/commonauth", headers=self.headers, data=data, cookies=self.cookies, timeout=self.timeout)
-        print(response.text)
-        
-        
+    def setPhpSession(self, PHPSESSID):
+        self.cookies["PHPSESSID"] = PHPSESSID
     
-        print(self.session.cookies.get_dict())
+    def getCustomerDTO(self, phoneNumber):
+        # Check if PHPSESSID is set
+        if "PHPSESSID" not in self.cookies:
+            return {"error": "PHPSESSID not set"}
+        
+        data = {
+            "action": "mykena_apigtw",
+            "apigtw_action": "getCustomerByMsisdn",
+            "msisdn": phoneNumber,
+            "nonce": "c000fcaaaa"
+        }
 
+        response = self.session.post(self.url, headers=self.headers, cookies=self.cookies, data=data, timeout=self.timeout)
 
+        if response.status_code == 200:
+            data = response.json()
+            if data["success"] == True:
+                return CustomerDTO(**data["data"]["data"]["customerDTO"])
+            else:
+                return {"error": data["message"]}
+        else:
+            return {"error": "Request failed"}
+        
+    def getUserCreditInfo(self, phoneNumber):
+        # Check if PHPSESSID is set
+        if "PHPSESSID" not in self.cookies:
+            return {"error": "PHPSESSID not set"}
+        
+        data = {
+            "action": "mykena_apigtw",
+            "apigtw_action": "getCreditInfo",
+            "msisdn": phoneNumber,
+            "nonce": "c000fcaaaa"
+        }
+
+        response = self.session.post(self.url, headers=self.headers, cookies=self.cookies, data=data, timeout=self.timeout)
+
+        if response.status_code == 200:
+            data = response.json()
+            if data["success"] == True:
+                return UserCreditInfo(**data["data"]["data"])
+            else:
+                return {"error": data["message"]}
+        else:
+            return {"error": "Request failed"}
+        
+    def getUserPromo(self, phoneNumber):
+        # Check if PHPSESSID is set
+        if "PHPSESSID" not in self.cookies:
+            return {"error": "PHPSESSID not set"}
+        
+        data = {
+            "action": "mykena_apigtw",
+            "apigtw_action": "getLastPromoUser",
+            "msisdn": phoneNumber,
+            "nonce": "c000fcaaaa"
+        }
+
+        response = self.session.post(self.url, headers=self.headers, cookies=self.cookies, data=data, timeout=self.timeout)
+
+        if response.status_code == 200:
+            data = response.json()
+            if data["success"] == True:
+                # List of promos
+                promos = []
+                for promo in data["data"]["data"]:
+                    promos.append(PromoModel(**promo))
+
+                return promos
+            else:
+                return {"error": data["message"]}
+        else:
+            return {"error": "Request failed"}
