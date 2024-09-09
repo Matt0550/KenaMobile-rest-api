@@ -81,8 +81,8 @@ services:
   eurostreaming_scraping:
     image: matt0550/eurostreamingapi-scraping
     environment:
-      - PUID=1000     # UID of the user inside the container, make sure it has access to the database file
-      - PGID=1000     # GID of the user inside the container, make sure it has access to the database file
+      - PUID=1000     # UID of the user inside the container
+      - PGID=1000     # GID of the user inside the container
     ports:
       - 5000:5000
     restart: unless-stopped
