@@ -69,7 +69,7 @@ Clone the project
 version: '3'
 
 services:
-  eurostreaming_scraping:
+  kenamobile_restapi:
     image: matt0550/kenamobile_restapi
     environment:
       - PUID=1000     # UID of the user inside the container
